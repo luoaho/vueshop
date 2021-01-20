@@ -1,14 +1,14 @@
 <template>
     <div id="detail">
-        <detail-nav-bar class="detail-nav"/>
+        <detail-nav-bar class="detail-nav" @titleClick="titleClick"/>
         <scroll class="content" ref="scroll">
             <detail-swiper :top-images="topImages"/>
             <detail-base-info :goods="goods"/>
             <detail-shop-info :shop="shop"/>
             <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad"/>
-            <detail-param-info :param-info="paramInfo"/>
-            <detail-comment-info :comment-info="commentInfo"/>
-            <goods-list :goods="recommends"/>
+            <detail-param-info :param-info="paramInfo" ref="params"/>
+            <detail-comment-info :comment-info="commentInfo" ref="comment"/>
+            <goods-list :goods="recommends" ref="recommend"/>
         </scroll>
     </div>
 </template>
@@ -26,7 +26,7 @@
     import GoodsList from "components/content/goods/GoodsList";
 
     import {getDetail, Goods, Shop, GoodsParam, getRecommend} from "network/detail";
-
+    import {debounce} from 'common/utils'
     export default {
         name: "Detail",
         data() {
@@ -38,7 +38,9 @@
                 detailInfo: {},
                 paramInfo: {},
                 commentInfo: {},
-                recommends: []
+                recommends: [],
+                themeTopYs: [],
+                getThemeTopY: null
             }
         },
         components: {
@@ -74,11 +76,29 @@
             getRecommend().then(res => {
                 this.recommends = res.data.list
             })
+            this.getThemeTopY = debounce(() => {
+                this.themeTopYs = []
+                this.themeTopYs.push(0)
+                this.themeTopYs.push(this.$refs.params.$el.offsetTop)
+                this.themeTopYs.push(this.$refs.comment.$el.offsetTop)
+                this.themeTopYs.push(this.$refs.recommend.$el.offsetTop)
+            }, 100)
         },
         methods: {
             imageLoad() {
                 this.$refs.scroll.refresh()
-            }
+                this.getThemeTopY()
+            },
+            titleClick(index) {
+                this.$refs.scroll.scrollTo(0, -this.themeTopYs[index], 250)
+            },
+        },
+        mounted() {
+            //1、图片加载完成的事件监听
+            const refresh = debounce(this.$refs.scroll.refresh, 50)
+            this.$bus.$on('detailItemImageLoad', () => {
+                refresh()
+            })
         }
     }
 </script>

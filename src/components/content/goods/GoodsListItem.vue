@@ -27,10 +27,19 @@
         },
         methods: {
             imageLoad() {
-                this.$bus.$emit('itemImageLoad')
+                //this.$bus.$emit('itemImageLoad')
+                if(this.$route.path.indexOf('/home') !== -1){
+                    this.$bus.$emit('homeItemImageLoad')
+                }else if(this.$route.path.indexOf('/detail') !== -1){
+                    this.$bus.$emit('detailItemImageLoad')
+                }
             },
             itemClick() {
-                this.$router.push('/detail/' + this.goodsItem.iid)
+                if (this.$route.path.indexOf('/home') !== -1){
+                    this.$router.push('/detail/' + this.goodsItem.iid)
+                }else if(this.$route.path.indexOf('/detail') !== -1){
+                    return null
+                }
             }
         }
     }
