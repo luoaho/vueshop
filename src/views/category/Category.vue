@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="heioooi">
         <div class="wrapper" ref="aaaa">
             <ul class="content">
                 <li>列表1</li>
@@ -109,7 +109,6 @@
 
 <script>
     import BScroll from 'better-scroll'
-
     export default {
         name: "Category",
         data() {

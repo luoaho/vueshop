@@ -119,7 +119,7 @@
                 this.$refs.tabControl2.currentIndex = index
             },
             backClick() {
-                this.$refs.scroll.scrollTo(0, -2000)
+                this.$refs.scroll.scrollTo(0, 0, 300)
             },
             contentScroll(position) {
                 //1、判断BackTop是否显示

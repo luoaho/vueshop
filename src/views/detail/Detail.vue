@@ -1,7 +1,7 @@
 <template>
     <div id="detail">
-        <detail-nav-bar class="detail-nav" @titleClick="titleClick"/>
-        <scroll class="content" ref="scroll">
+        <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="nav"/>
+        <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
             <detail-swiper :top-images="topImages"/>
             <detail-base-info :goods="goods"/>
             <detail-shop-info :shop="shop"/>
@@ -10,6 +10,8 @@
             <detail-comment-info :comment-info="commentInfo" ref="comment"/>
             <goods-list :goods="recommends" ref="recommend"/>
         </scroll>
+        <detail-bottom-bar @addCart="addToCart"/>
+        <back-top @click.native="backClick" v-show="isShowBackTop"/>
     </div>
 </template>
 
@@ -21,12 +23,14 @@
     import DetailGoodsInfo from "./childComps/DetailGoodsInfo";
     import DetailParamInfo from "./childComps/DetailParamInfo";
     import DetailCommentInfo from "./childComps/DetailCommentInfo";
+    import DetailBottomBar from "./childComps/DetailBottomBar";
 
     import Scroll from "components/common/scroll/Scroll";
     import GoodsList from "components/content/goods/GoodsList";
 
     import {getDetail, Goods, Shop, GoodsParam, getRecommend} from "network/detail";
     import {debounce} from 'common/utils'
+    import {backTopMixin} from 'common/mixin'
     export default {
         name: "Detail",
         data() {
@@ -40,9 +44,11 @@
                 commentInfo: {},
                 recommends: [],
                 themeTopYs: [],
-                getThemeTopY: null
+                getThemeTopY: null,
+                currentIndex: 0
             }
         },
+        mixins: [backTopMixin],
         components: {
             DetailNavBar,
             DetailSwiper,
@@ -52,7 +58,8 @@
             DetailGoodsInfo,
             DetailParamInfo,
             DetailCommentInfo,
-            GoodsList
+            GoodsList,
+            DetailBottomBar
         },
         created() {
             this.iid = this.$route.params.iid
@@ -92,6 +99,28 @@
             titleClick(index) {
                 this.$refs.scroll.scrollTo(0, -this.themeTopYs[index], 250)
             },
+            contentScroll(position) {
+                const positionY = -position.y
+                let length = this.themeTopYs.length
+                for (let i = 0; i < length ; i++ ) {
+                    if (this.currentIndex !== i && (i < length-1 && positionY > this.themeTopYs[i] && positionY < this.themeTopYs[i+1]) || (i === length-1 && positionY > this.themeTopYs[i])) {
+                        this.currentIndex = i ;
+                        this.$refs.nav.currentIndex = this.currentIndex
+                    }
+                    this.listenShowBackTop(position)
+                }
+            },
+            addToCart() {
+                //1.获取购物车需要展示的信息
+                const  product = {}
+                product.image = this.topImages[0];
+                product.title = this.goods.title;
+                product.desc = this.detailInfo.desc;
+                product.price = this.goods.realPrice;
+                product.iid = this.iid
+                //2.将商品加入到购物车
+                this.$store.dispatch('addCart', product)
+            }
         },
         mounted() {
             //1、图片加载完成的事件监听
